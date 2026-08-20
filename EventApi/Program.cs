@@ -1,11 +1,13 @@
 using System.Text;
 using EventApi.Application.Interfaces;
 using EventApi.Application.Mapping;
+using EventApi.Application.OData;
 using EventApi.Application.Services;
 using EventApi.Infrastructure.Data;
 using EventApi.Infrastructure.Repositories;
 using EventApi.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.OData;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -20,6 +22,8 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<IOrganizerService, OrganizerService>();
+builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
@@ -50,7 +54,11 @@ builder.Services.AddControllers(options =>
 {
     options.RespectBrowserAcceptHeader = true;
     options.ReturnHttpNotAcceptable = true;
-}).AddXmlSerializerFormatters();
+})
+.AddXmlSerializerFormatters()
+.AddOData(options => options
+    .Select().Filter().OrderBy().Count().SetMaxTop(100)
+    .AddRouteComponents("odata", ODataEdmModel.GetEdmModel()));
 
 builder.Services.AddCors(options =>
 {

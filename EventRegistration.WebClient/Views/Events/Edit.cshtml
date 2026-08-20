@@ -1,0 +1,71 @@
+@model EventRegistration.WebClient.Models.EditEventViewModel
+@{ ViewData["Title"] = "Edit Event"; }
+
+<div class="page-header">
+    <h1><i class="bi bi-pencil me-2 text-primary"></i>Sửa Event</h1>
+    <p class="subtitle">Trạng thái: <span class="badge bg-light text-dark border">@Model.Status</span></p>
+</div>
+
+<div class="form-page">
+    <div class="card-app">
+        <div class="card-body">
+            <form asp-action="Edit" method="post">
+                <input type="hidden" asp-for="Id" />
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div class="mb-3">
+                    <label asp-for="Title" class="form-label">Tiêu đề</label>
+                    <input asp-for="Title" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label">Mô tả</label>
+                    <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label asp-for="StartTime" class="form-label">Bắt đầu</label>
+                        <input asp-for="StartTime" type="datetime-local" class="form-control"
+                               value="@Model.StartTime.ToString("yyyy-MM-ddTHH:mm")" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="EndTime" class="form-label">Kết thúc</label>
+                        <input asp-for="EndTime" type="datetime-local" class="form-control"
+                               value="@Model.EndTime.ToString("yyyy-MM-ddTHH:mm")" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="RegistrationDeadline" class="form-label">Hạn đăng ký</label>
+                        <input asp-for="RegistrationDeadline" type="datetime-local" class="form-control"
+                               value="@Model.RegistrationDeadline.ToString("yyyy-MM-ddTHH:mm")" />
+                    </div>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label asp-for="Capacity" class="form-label">Sức chứa</label>
+                        <input asp-for="Capacity" type="number" class="form-control" min="1" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="LocationId" class="form-label">Location</label>
+                        <select asp-for="LocationId" class="form-select">
+                            @foreach (var loc in Model.Locations)
+                            {
+                                <option value="@loc.Id" selected="@(loc.Id == Model.LocationId)">@loc.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="OrganizerId" class="form-label">Organizer</label>
+                        <select asp-for="OrganizerId" class="form-select">
+                            @foreach (var org in Model.Organizers)
+                            {
+                                <option value="@org.Id" selected="@(org.Id == Model.OrganizerId)">@org.Name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Lưu</button>
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

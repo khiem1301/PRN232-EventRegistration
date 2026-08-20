@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
@@ -25,6 +25,11 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto ms-lg-3">
                         <li class="nav-item">
+                            <a class="nav-link" asp-controller="Events" asp-action="Index">
+                                <i class="bi bi-calendar-event me-1"></i>Events
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" asp-controller="Locations" asp-action="Index">
                                 <i class="bi bi-geo-alt me-1"></i>Locations
                             </a>
@@ -34,6 +39,14 @@
                                 <i class="bi bi-people me-1"></i>Organizers
                             </a>
                         </li>
+                        @if (Context.Session.GetString("UserRole") is "Staff" or "Admin")
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Reports" asp-action="Index">
+                                    <i class="bi bi-bar-chart me-1"></i>Reports
+                                </a>
+                            </li>
+                        }
                         @if (Context.Session.GetString("JwtToken") != null)
                         {
                             <li class="nav-item">

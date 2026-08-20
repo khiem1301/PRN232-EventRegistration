@@ -1,4 +1,4 @@
-# Integration Contract — Khiêm (Member 1)
+# Integration Contract — Khiêm (Member 1) + TV2 (Member 2)
 
 > Baseline for TV2 (Events) and TV3 (Registration/Feedback) integration.
 
@@ -11,6 +11,7 @@
 | `Result<T>`, `PagedResult<T>` | `EventApi/Domain/Common/Result.cs` | Return from services; use `ToActionResult` in controllers |
 | JWT + Roles | Configured in `EventApi/Program.cs` | Use `[Authorize(Roles = "...")]` on your controllers |
 | Content Negotiation | Global in `Program.cs` | JSON + XML supported; other formats return 406 |
+| OData | `EventApi/Application/OData/ODataEdmModel.cs` | `GET /odata/Events` (Staff, Admin) |
 
 ## Database
 
@@ -19,15 +20,56 @@
 - Seed users:
   - `admin@fpt.edu.vn` / `Admin@123` (Admin)
   - `staff@fpt.edu.vn` / `Staff@123` (Staff)
+- Seed events: 5 sample events (Draft, Published, Ongoing, Completed, Cancelled) via `DbInitializer.SeedEventsAsync`
 
-### TV2 — Events
+### TV2 — Events (Implemented)
 
-Add/extend `Event` entity in `Domain/Entities/Event.cs` (stub FKs already exist: `LocationId`, `OrganizerId`, `CreatedById`).
+Entity `Event` in `Domain/Entities/Event.cs`. No schema migration required — uses baseline tables.
 
-```bash
-dotnet ef migrations add TV2_Events -p EventApi
-dotnet ef database update -p EventApi
+**REST Endpoints:**
+
+| Method | Route | Auth | UC |
+|--------|-------|------|-----|
+| GET | `/api/events` | Anonymous (Published/Ongoing/Completed only) | UC04 |
+| GET | `/api/events/{id}` | Anonymous (filtered) | UC04 |
+| POST | `/api/events` | Staff, Admin | UC11 |
+| PUT | `/api/events/{id}` | Staff, Admin | UC11 |
+| POST | `/api/events/{id}/publish` | Staff, Admin | UC12 |
+| POST | `/api/events/{id}/start` | Staff, Admin | UC12 |
+| POST | `/api/events/{id}/complete` | Staff, Admin | UC12 |
+| POST | `/api/events/{id}/cancel` | Staff, Admin | UC12 |
+| GET | `/api/reports/event/{id}` | Staff, Admin | UC14 |
+| GET | `/api/reports/events` | Staff, Admin | UC14 |
+| GET | `/api/reports/overview` | Staff, Admin | UC14 |
+| GET | `/odata/Events` | Staff, Admin | OData |
+
+**AvailableSlots contract:**
+
 ```
+AvailableSlots = Capacity - COUNT(Registrations WHERE Status != "Cancelled")
+```
+
+Computed server-side in `EventService`, `ReportService`, and OData projection.
+
+**Business Rules (TV2):**
+
+- **BR-E-01**: Valid status transitions only (Draft→Published→Ongoing→Completed; Cancel from Draft/Published/Ongoing)
+- **BR-E-02**: Staff cannot edit Completed/Cancelled events; Admin can
+- **BR-E-03**: Capacity ≥ active registration count on update
+- **BR-E-04**: EndTime > StartTime; RegistrationDeadline ≤ StartTime
+
+**MVC WebClient:**
+
+| Route | Role | Description |
+|-------|------|-------------|
+| `/Events` | All | Browse, search, filter |
+| `/Events/Details/{id}` | All | Event detail + AvailableSlots |
+| `/Events/Create`, `/Events/Edit/{id}` | Staff, Admin | UC11 |
+| `/Events/Manage/{id}` | Staff, Admin | UC12 workflow |
+| `/Reports` | Staff, Admin | Dashboard |
+| `/Reports/Event/{id}` | Staff, Admin | Per-event report |
+
+**TV3 dependency:** Registration/Feedback APIs not implemented by TV2. Reports and AvailableSlots read `Registrations`/`Feedbacks` tables directly — metrics update when TV3 seeds real data.
 
 ### TV3 — Registration & Feedback
 
@@ -46,6 +88,9 @@ dotnet ef database update -p EventApi
 | Account | `GET/PUT /api/account/me`, `PUT /api/account/me/password` |
 | Users | CRUD `/api/users` (Admin only) |
 | Catalog | CRUD `/api/locations`, `/api/organizers` |
+| Events | CRUD + workflow `/api/events/*` |
+| Reports | `/api/reports/*` (Staff, Admin) |
+| OData | `GET /odata/Events` (Staff, Admin) |
 
 ## Business Rules Implemented
 
@@ -54,6 +99,7 @@ dotnet ef database update -p EventApi
 - **BR-G-03**: PBKDF2 password hashing (100k iterations, SHA256)
 - **BR-G-04**: Role-based authorization policies
 - **BR-E-05**: Block delete Location/Organizer when referenced by Events
+- **BR-E-01 → BR-E-04**: Event lifecycle rules (see TV2 section above)
 
 ## Running Locally
 

@@ -1,0 +1,48 @@
+@model EventRegistration.WebClient.Models.EventReportViewModel
+@{ ViewData["Title"] = $"Report — {Model.Title}"; }
+
+<div class="page-header d-flex flex-wrap justify-content-between align-items-end gap-3">
+    <div>
+        <h1>@Model.Title</h1>
+        <p class="subtitle">Báo cáo chi tiết — <span class="badge bg-light text-dark border">@Model.Status</span></p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Dashboard</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card-app p-4">
+            <h5 class="mb-3">Fill Rate</h5>
+            <div class="progress mb-2" style="height: 12px;">
+                <div class="progress-bar bg-primary" style="width: @(Model.FillRate * 100)%"></div>
+            </div>
+            <p class="mb-0">@Model.RegisteredCount / @Model.Capacity đăng ký (@Model.FillRate.ToString("P1"))</p>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card-app p-4">
+            <h5 class="mb-3">Attendance Rate</h5>
+            <div class="progress mb-2" style="height: 12px;">
+                <div class="progress-bar bg-success" style="width: @(Model.AttendanceRate * 100)%"></div>
+            </div>
+            <p class="mb-0">@Model.CheckedInCount / @Model.RegisteredCount check-in (@Model.AttendanceRate.ToString("P1"))</p>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card-app p-4 text-center">
+            <div class="text-muted small">Average Rating</div>
+            <div class="fs-2 fw-bold">@(Model.AverageRating?.ToString("F1") ?? "—")</div>
+            <div class="text-muted">@Model.FeedbackCount feedback(s)</div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card-app p-4">
+            <h5 class="mb-3">Tóm tắt</h5>
+            <ul class="list-unstyled mb-0">
+                <li class="d-flex justify-content-between py-1"><span>Sức chứa</span><strong>@Model.Capacity</strong></li>
+                <li class="d-flex justify-content-between py-1"><span>Đăng ký</span><strong>@Model.RegisteredCount</strong></li>
+                <li class="d-flex justify-content-between py-1"><span>Check-in</span><strong>@Model.CheckedInCount</strong></li>
+            </ul>
+        </div>
+    </div>
+</div>
