@@ -1,0 +1,41 @@
+@model EventRegistration.WebClient.Models.LocationViewModel
+@{ ViewData["Title"] = "Edit Location"; }
+
+<div class="page-header">
+    <h1><i class="bi bi-pencil-square me-2 text-primary"></i>Sửa Location</h1>
+</div>
+
+<div class="form-page">
+    <div class="card-app">
+        <div class="card-body">
+            <form asp-action="Edit" method="post">
+                <input type="hidden" asp-for="Id" />
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div class="mb-3">
+                    <label asp-for="Name" class="form-label"></label>
+                    <input asp-for="Name" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Address" class="form-label"></label>
+                    <input asp-for="Address" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label"></label>
+                    <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Capacity" class="form-label"></label>
+                    <input asp-for="Capacity" type="number" class="form-control" />
+                </div>
+                <div class="mb-4 form-check">
+                    <input asp-for="IsActive" class="form-check-input" />
+                    <label asp-for="IsActive" class="form-check-label"></label>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Lưu</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

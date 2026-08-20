@@ -1,0 +1,62 @@
+﻿@{
+    ViewData["Title"] = "Home";
+    var isLoggedIn = Context.Session.GetString("JwtToken") != null;
+    var role = Context.Session.GetString("UserRole");
+}
+
+<section class="hero">
+    <h1>Student Event Registration</h1>
+    <p>Khám phá địa điểm, ban tổ chức và quản lý hồ sơ cá nhân — tất cả tại một nơi.</p>
+    <div class="hero-actions">
+        @if (!isLoggedIn)
+        {
+            <a class="btn btn-light-hero btn-lg" asp-controller="Auth" asp-action="Login">
+                <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập
+            </a>
+            <a class="btn btn-outline-hero btn-lg" asp-controller="Auth" asp-action="Register">
+                <i class="bi bi-person-plus me-1"></i>Đăng ký
+            </a>
+        }
+        else
+        {
+            <a class="btn btn-light-hero btn-lg" asp-controller="Account" asp-action="Index">
+                <i class="bi bi-person-circle me-1"></i>Hồ sơ của tôi
+            </a>
+            @if (role == "Admin")
+            {
+                <a class="btn btn-outline-hero btn-lg" asp-controller="Users" asp-action="Index">
+                    <i class="bi bi-shield-lock me-1"></i>Quản lý Users
+                </a>
+            }
+        }
+    </div>
+</section>
+
+<div class="feature-grid">
+    <a class="feature-card" asp-controller="Locations" asp-action="Index">
+        <div class="icon"><i class="bi bi-geo-alt-fill"></i></div>
+        <h3>Locations</h3>
+        <p>Xem danh sách địa điểm tổ chức sự kiện trong campus.</p>
+    </a>
+    <a class="feature-card" asp-controller="Organizers" asp-action="Index">
+        <div class="icon"><i class="bi bi-building"></i></div>
+        <h3>Organizers</h3>
+        <p>Tìm hiểu các ban tổ chức và thông tin liên hệ.</p>
+    </a>
+    @if (isLoggedIn)
+    {
+        <a class="feature-card" asp-controller="Account" asp-action="Index">
+            <div class="icon"><i class="bi bi-person-badge"></i></div>
+            <h3>My Profile</h3>
+            <p>Cập nhật thông tin cá nhân và đổi mật khẩu.</p>
+        </a>
+    }
+    else
+    {
+        <a class="feature-card" asp-controller="Auth" asp-action="Register">
+            <div class="icon"><i class="bi bi-mortarboard"></i></div>
+            <h3>Student Account</h3>
+            <p>Đăng ký tài khoản sinh viên để tham gia sự kiện.</p>
+        </a>
+    }
+</div>
