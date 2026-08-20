@@ -1,0 +1,37 @@
+@model EventRegistration.WebClient.Models.LoginViewModel
+@{ ViewData["Title"] = "Login"; }
+
+<div class="auth-wrapper">
+    <div class="auth-card card-app">
+        <div class="card-header">
+            <div class="auth-icon"><i class="bi bi-box-arrow-in-right"></i></div>
+            <h2>Đăng nhập</h2>
+            <p class="auth-subtitle">Nhập email và mật khẩu để tiếp tục</p>
+        </div>
+        <div class="card-body">
+            <form asp-action="Login" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                        <input asp-for="Email" class="form-control" placeholder="email@fpt.edu.vn" />
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="Password" class="form-label"></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                        <input asp-for="Password" type="password" class="form-control" placeholder="••••••••" />
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2">
+                    <i class="bi bi-box-arrow-in-right me-1"></i>Đăng nhập
+                </button>
+                <p class="text-center mt-3 mb-0 text-muted" style="font-size:0.875rem">
+                    Chưa có tài khoản? <a asp-action="Register" class="fw-semibold">Đăng ký ngay</a>
+                </p>
+            </form>
+        </div>
+    </div>
+</div>

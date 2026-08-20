@@ -1,0 +1,102 @@
+@model EventRegistration.WebClient.Models.PagedUsersViewModel
+@{ ViewData["Title"] = "User Management"; var totalPages = Math.Max(1, (Model.TotalCount + Model.PageSize - 1) / Model.PageSize); }
+
+<div class="page-header d-flex flex-wrap justify-content-between align-items-end gap-3">
+    <div>
+        <h1><i class="bi bi-shield-lock me-2 text-primary"></i>Quản lý Users</h1>
+        <p class="subtitle">@Model.TotalCount người dùng trong hệ thống</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-person-plus me-1"></i>Tạo User
+    </a>
+</div>
+
+<div class="search-bar">
+    <form method="get" class="row g-2 align-items-center">
+        <div class="col-md-8">
+            <div class="input-group">
+                <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                <input name="search" value="@Model.Search" class="form-control" placeholder="Tìm theo tên, email, mã SV..." />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <button type="submit" class="btn btn-primary w-100">Tìm kiếm</button>
+        </div>
+    </form>
+</div>
+
+<div class="card-app">
+    @if (Model.Items.Count == 0)
+    {
+        <div class="empty-state">
+            <i class="bi bi-people d-block"></i>
+            <p>Không tìm thấy user nào.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-app">
+                <thead>
+                    <tr>
+                        <th>Họ tên</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model.Items)
+                    {
+                        <tr>
+                            <td class="fw-medium">@user.FullName</td>
+                            <td class="text-muted">@user.Email</td>
+                            <td><partial name="_RoleBadge" view-data='new ViewDataDictionary(ViewData) { { "Role", user.Role } }' /></td>
+                            <td>
+                                @if (user.IsActive)
+                                {
+                                    <span class="badge badge-status-active">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-status-inactive">Inactive</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-outline-primary btn-action">
+                                    <i class="bi bi-pencil"></i> Sửa
+                                </a>
+                                @if (user.IsActive)
+                                {
+                                    <form asp-action="Deactivate" asp-route-id="@user.Id" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-outline-danger btn-action" onclick="return confirm('Deactivate user này?')">
+                                            <i class="bi bi-person-x"></i>
+                                        </button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination-bar">
+            <span>Trang @Model.Page / @totalPages</span>
+            <div class="d-flex gap-2">
+                @if (Model.Page > 1)
+                {
+                    <a asp-action="Index" asp-route-search="@Model.Search" asp-route-page="@(Model.Page - 1)" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-chevron-left"></i> Trước
+                    </a>
+                }
+                @if (Model.Page * Model.PageSize < Model.TotalCount)
+                {
+                    <a asp-action="Index" asp-route-search="@Model.Search" asp-route-page="@(Model.Page + 1)" class="btn btn-sm btn-outline-secondary">
+                        Sau <i class="bi bi-chevron-right"></i>
+                    </a>
+                }
+            </div>
+        </div>
+    }
+</div>

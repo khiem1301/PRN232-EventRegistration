@@ -1,0 +1,51 @@
+@model EventRegistration.WebClient.Models.EditUserViewModel
+@{ ViewData["Title"] = "Edit User"; }
+
+<div class="page-header">
+    <h1><i class="bi bi-pencil-square me-2 text-primary"></i>Sửa User</h1>
+</div>
+
+<div class="form-page">
+    <div class="card-app">
+        <div class="card-body">
+            <form asp-action="Edit" method="post">
+                <input type="hidden" asp-for="Id" />
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input value="@Model.Email" class="form-control" disabled />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="FullName" class="form-label"></label>
+                    <input asp-for="FullName" class="form-control" />
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="StudentCode" class="form-label"></label>
+                        <input asp-for="StudentCode" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Phone" class="form-label"></label>
+                        <input asp-for="Phone" class="form-control" />
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Role" class="form-label"></label>
+                    <select asp-for="Role" class="form-select">
+                        <option>Student</option>
+                        <option>Staff</option>
+                        <option>Admin</option>
+                    </select>
+                </div>
+                <div class="mb-4 form-check">
+                    <input asp-for="IsActive" class="form-check-input" />
+                    <label asp-for="IsActive" class="form-check-label"></label>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Lưu</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

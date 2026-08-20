@@ -1,0 +1,49 @@
+@model EventRegistration.WebClient.Models.RegisterViewModel
+@{ ViewData["Title"] = "Register"; }
+
+<div class="auth-wrapper">
+    <div class="auth-card card-app">
+        <div class="card-header">
+            <div class="auth-icon"><i class="bi bi-person-plus"></i></div>
+            <h2>Đăng ký sinh viên</h2>
+            <p class="auth-subtitle">Tạo tài khoản Student mới</p>
+        </div>
+        <div class="card-body">
+            <form asp-action="Register" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                <div class="mb-3">
+                    <label asp-for="FullName" class="form-label"></label>
+                    <input asp-for="FullName" class="form-control" placeholder="Nguyễn Văn A" />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" placeholder="email@fpt.edu.vn" />
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="StudentCode" class="form-label"></label>
+                        <input asp-for="StudentCode" class="form-control" placeholder="HE123456" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Phone" class="form-label"></label>
+                        <input asp-for="Phone" class="form-control" placeholder="0901234567" />
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label"></label>
+                    <input asp-for="Password" type="password" class="form-control" />
+                </div>
+                <div class="mb-4">
+                    <label asp-for="ConfirmPassword" class="form-label"></label>
+                    <input asp-for="ConfirmPassword" type="password" class="form-control" />
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2">
+                    <i class="bi bi-person-check me-1"></i>Đăng ký
+                </button>
+                <p class="text-center mt-3 mb-0 text-muted" style="font-size:0.875rem">
+                    Đã có tài khoản? <a asp-action="Login" class="fw-semibold">Đăng nhập</a>
+                </p>
+            </form>
+        </div>
+    </div>
+</div>

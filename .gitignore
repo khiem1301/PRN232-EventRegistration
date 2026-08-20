@@ -1,0 +1,35 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Visual Studio
+.vs/
+*.rsuser
+
+## Rider / VS Code
+.idea/
+.vscode/
+
+## OS
+Thumbs.db
+.DS_Store
+
+## Logs & secrets
+*.log
+appsettings.Development.json
+secrets.json
+.env
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+publish/
+
+## EF
+*.db
+*.db-shm
+*.db-wal

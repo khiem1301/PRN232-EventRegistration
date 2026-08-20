@@ -1,0 +1,10 @@
+@{
+    var role = ViewData["Role"]?.ToString() ?? "";
+    var css = role switch
+    {
+        "Admin" => "badge-role-admin",
+        "Staff" => "badge-role-staff",
+        _ => "badge-role-student"
+    };
+}
+<span class="badge badge-role @css">@role</span>

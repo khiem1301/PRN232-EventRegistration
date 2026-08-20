@@ -1,0 +1,73 @@
+@baseUrl = https://localhost:7026
+
+### UC01 - Register Student
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "student@test.com",
+  "password": "Student@123",
+  "fullName": "Test Student",
+  "studentCode": "SE123456",
+  "phone": "0901111111"
+}
+
+### UC01 - Register duplicate email (expect 409)
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "student@test.com",
+  "password": "Student@123",
+  "fullName": "Duplicate",
+  "studentCode": "SE999999"
+}
+
+### UC02 - Login Admin
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@fpt.edu.vn",
+  "password": "Admin@123"
+}
+
+### UC02 - Login wrong password (expect 401)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@fpt.edu.vn",
+  "password": "WrongPassword"
+}
+
+### UC03 - Get profile (requires token)
+GET {{baseUrl}}/api/account/me
+Authorization: Bearer {{loginAdmin.response.body.token}}
+Accept: application/json
+
+### UC03 - Get profile as XML (Content Negotiation)
+GET {{baseUrl}}/api/account/me
+Authorization: Bearer {{loginAdmin.response.body.token}}
+Accept: application/xml
+
+### UC03 - Get profile with CSV accept (expect 406)
+GET {{baseUrl}}/api/account/me
+Authorization: Bearer {{loginAdmin.response.body.token}}
+Accept: text/csv
+
+### UC09 - List users (Admin)
+GET {{baseUrl}}/api/users?search=&page=1&pageSize=10
+Authorization: Bearer {{loginAdmin.response.body.token}}
+
+### UC10 - List locations (anonymous)
+GET {{baseUrl}}/api/locations
+Accept: application/json
+
+### UC10 - List locations as XML
+GET {{baseUrl}}/api/locations
+Accept: application/xml
+
+### UC10 - List organizers
+GET {{baseUrl}}/api/organizers
