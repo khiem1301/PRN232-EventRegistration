@@ -1,0 +1,77 @@
+@model EventRegistration.WebClient.Models.EventDetailViewModel
+@{ ViewData["Title"] = Model.Title; var canManage = Context.Session.GetString("UserRole") is "Staff" or "Admin"; }
+
+<div class="page-header d-flex flex-wrap justify-content-between align-items-end gap-3">
+    <div>
+        <h1>@Model.Title</h1>
+        <p class="subtitle"><span class="badge bg-light text-dark border">@Model.Status</span></p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Quay lại</a>
+        @if (canManage)
+        {
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary"><i class="bi bi-pencil me-1"></i>Sửa</a>
+            <a asp-action="Manage" asp-route-id="@Model.Id" class="btn btn-primary"><i class="bi bi-gear me-1"></i>Quản lý</a>
+        }
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card-app">
+            <div class="card-body">
+                <h5 class="mb-3">Mô tả</h5>
+                <p class="text-muted">@(Model.Description ?? "Không có mô tả.")</p>
+                <hr />
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <small class="text-muted d-block">Bắt đầu</small>
+                        <strong>@Model.StartTime.ToString("dd/MM/yyyy HH:mm")</strong>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted d-block">Kết thúc</small>
+                        <strong>@Model.EndTime.ToString("dd/MM/yyyy HH:mm")</strong>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted d-block">Hạn đăng ký</small>
+                        <strong>@Model.RegistrationDeadline.ToString("dd/MM/yyyy HH:mm")</strong>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted d-block">Sức chứa</small>
+                        <strong>@Model.Capacity chỗ</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card-app mb-3">
+            <div class="card-body">
+                <h5 class="mb-3">Đăng ký</h5>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Đã đăng ký</span>
+                    <strong>@Model.RegisteredCount</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span>Còn trống</span>
+                    <strong class="@(Model.AvailableSlots > 0 ? "text-success" : "text-danger")">@Model.AvailableSlots</strong>
+                </div>
+                @{
+                    var fillPct = Model.Capacity > 0 ? (double)Model.RegisteredCount / Model.Capacity * 100 : 0;
+                }
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar" style="width: @fillPct%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="card-app">
+            <div class="card-body">
+                <h5 class="mb-3">Thông tin</h5>
+                <p class="mb-1"><i class="bi bi-geo-alt me-1"></i><strong>@Model.Location.Name</strong></p>
+                <p class="text-muted small mb-3">@Model.Location.Address</p>
+                <p class="mb-1"><i class="bi bi-people me-1"></i><strong>@Model.Organizer.Name</strong></p>
+                <p class="text-muted small">@Model.Organizer.ContactEmail</p>
+            </div>
+        </div>
+    </div>
+</div>

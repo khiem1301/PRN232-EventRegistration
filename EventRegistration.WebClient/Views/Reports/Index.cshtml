@@ -1,0 +1,135 @@
+@model EventRegistration.WebClient.Models.OverviewReportViewModel
+@{
+    ViewData["Title"] = "Reports";
+    var paged = ViewBag.PagedReports as EventRegistration.WebClient.Models.PagedReportsViewModel;
+    var statusFilter = ViewBag.Status as string;
+}
+
+<div class="page-header">
+    <h1><i class="bi bi-bar-chart me-2 text-primary"></i>Reports Dashboard</h1>
+    <p class="subtitle">UC14 — Báo cáo sự kiện</p>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card-app text-center p-3">
+            <div class="text-muted small">Tổng Events</div>
+            <div class="fs-3 fw-bold">@Model.TotalEvents</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-app text-center p-3">
+            <div class="text-muted small">Tổng đăng ký</div>
+            <div class="fs-3 fw-bold">@Model.TotalRegistrations</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-app text-center p-3">
+            <div class="text-muted small">Tỷ lệ tham dự</div>
+            <div class="fs-3 fw-bold">@(Model.OverallAttendanceRate.ToString("P0"))</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card-app text-center p-3">
+            <div class="text-muted small">Fill Rate</div>
+            <div class="fs-3 fw-bold">@(Model.OverallFillRate.ToString("P0"))</div>
+        </div>
+    </div>
+</div>
+
+@if (Model.EventsByStatus.Count > 0)
+{
+    <div class="card-app mb-4">
+        <div class="card-body">
+            <h5 class="mb-3">Events theo trạng thái</h5>
+            <div class="d-flex flex-wrap gap-2">
+                @foreach (var kv in Model.EventsByStatus)
+                {
+                    <span class="badge bg-light text-dark border">@kv.Key: @kv.Value</span>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+<div class="card-app">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">Báo cáo theo Event</h5>
+            <form asp-action="Index" method="get" class="d-flex gap-2">
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">Tất cả</option>
+                    @foreach (var s in new[] { "Draft", "Published", "Ongoing", "Completed", "Cancelled" })
+                    {
+                        <option value="@s" selected="@(statusFilter == s ? "selected" : null)">@s</option>
+                    }
+                </select>
+                <button type="submit" class="btn btn-sm btn-outline-primary">Lọc</button>
+            </form>
+        </div>
+
+        @if (Model.EventReports.Count == 0)
+        {
+            <p class="text-muted mb-0">Không có dữ liệu báo cáo.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-app">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Trạng thái</th>
+                            <th>Fill Rate</th>
+                            <th>Attendance</th>
+                            <th>Rating</th>
+                            <th class="text-end">Chi tiết</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model.EventReports)
+                        {
+                            <tr>
+                                <td class="fw-medium">@r.Title</td>
+                                <td><span class="badge bg-light text-dark border">@r.Status</span></td>
+                                <td>
+                                    <div class="progress" style="height: 6px; min-width: 80px;">
+                                        <div class="progress-bar" style="width: @(r.FillRate * 100)%"></div>
+                                    </div>
+                                    <small class="text-muted">@r.RegisteredCount/@r.Capacity (@r.FillRate.ToString("P0"))</small>
+                                </td>
+                                <td>@r.AttendanceRate.ToString("P0") (@r.CheckedInCount/@r.RegisteredCount)</td>
+                                <td>@(r.AverageRating?.ToString("F1") ?? "—") (@r.FeedbackCount)</td>
+                                <td class="text-end">
+                                    <a asp-action="EventDetail" asp-route-id="@r.EventId" class="btn btn-outline-primary btn-action">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (paged != null && paged.TotalCount > paged.PageSize)
+            {
+                var totalPages = (int)Math.Ceiling((double)paged.TotalCount / paged.PageSize);
+                <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                    <span class="text-muted">Trang @paged.Page / @totalPages</span>
+                    <div class="btn-group">
+                        @if (paged.Page > 1)
+                        {
+                            <a asp-action="Index" asp-route-page="@(paged.Page - 1)" asp-route-status="@statusFilter"
+                               class="btn btn-outline-secondary btn-sm">Trước</a>
+                        }
+                        @if (paged.Page < totalPages)
+                        {
+                            <a asp-action="Index" asp-route-page="@(paged.Page + 1)" asp-route-status="@statusFilter"
+                               class="btn btn-outline-secondary btn-sm">Sau</a>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>

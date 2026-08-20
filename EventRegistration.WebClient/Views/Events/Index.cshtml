@@ -1,0 +1,135 @@
+@model EventRegistration.WebClient.Models.PagedEventsViewModel
+@{ 
+    ViewData["Title"] = "Events"; 
+    var canManage = Context.Session.GetString("UserRole") is "Staff" or "Admin";
+    var totalPages = Model.PageSize > 0 ? (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize) : 0;
+}
+
+<div class="page-header d-flex flex-wrap justify-content-between align-items-end gap-3">
+    <div>
+        <h1><i class="bi bi-calendar-event me-2 text-primary"></i>Events</h1>
+        <p class="subtitle">@Model.TotalCount sự kiện</p>
+    </div>
+    @if (canManage)
+    {
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Tạo Event
+        </a>
+    }
+</div>
+
+<div class="card-app mb-4">
+    <div class="card-body">
+        <form asp-action="Index" method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Tìm kiếm</label>
+                <input type="text" name="search" value="@Model.Search" class="form-control" placeholder="Title, mô tả..." />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Trạng thái</label>
+                <select name="status" class="form-select">
+                    <option value="">Tất cả</option>
+                    @{
+                        foreach (var s in new[] { "Draft", "Published", "Ongoing", "Completed", "Cancelled" })
+                        {
+                            <option value="@s" selected="@(Model.Status == s ? "selected" : null)">@s</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Sắp xếp</label>
+                <select name="sortBy" class="form-select">
+                    <option value="createdAt" selected="@(Model.SortBy == "createdAt")">Mới tạo</option>
+                    <option value="startTime" selected="@(Model.SortBy == "startTime")">Thời gian sự kiện</option>
+                    <option value="title" selected="@(Model.SortBy == "title")">Tiêu đề</option>
+                    <option value="status" selected="@(Model.SortBy == "status")">Trạng thái</option>
+                    <option value="availableSlots" selected="@(Model.SortBy == "availableSlots")">Chỗ trống</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Hướng</label>
+                <select name="sortDir" class="form-select">
+                    <option value="desc" selected="@(Model.SortDir == "desc")">Giảm dần</option>
+                    <option value="asc" selected="@(Model.SortDir == "asc")">Tăng dần</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search me-1"></i>Lọc</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card-app">
+    @if (Model.Items.Count == 0)
+    {
+        <div class="empty-state">
+            <i class="bi bi-calendar-x d-block"></i>
+            <p>Không tìm thấy sự kiện nào.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-app">
+                <thead>
+                    <tr>
+                        <th>Tiêu đề</th>
+                        <th>Thời gian</th>
+                        <th>Địa điểm</th>
+                        <th>Trạng thái</th>
+                        <th>Đăng ký</th>
+                        <th>Còn trống</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td class="fw-medium">@item.Title</td>
+                            <td class="text-muted">@item.StartTime.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@item.LocationName</td>
+                            <td><span class="badge bg-light text-dark border">@item.Status</span></td>
+                            <td>@item.RegisteredCount / @item.Capacity</td>
+                            <td><span class="badge @(item.AvailableSlots > 0 ? "badge-status-active" : "badge-status-inactive")">@item.AvailableSlots</span></td>
+                            <td class="text-end">
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-primary btn-action">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                @if (canManage)
+                                {
+                                    <a asp-action="Manage" asp-route-id="@item.Id" class="btn btn-outline-secondary btn-action">
+                                        <i class="bi bi-gear"></i>
+                                    </a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (totalPages > 1)
+        {
+            <div class="d-flex justify-content-between align-items-center p-3 border-top">
+                <span class="text-muted">Trang @Model.Page / @totalPages</span>
+                <div class="btn-group">
+                    @if (Model.Page > 1)
+                    {
+                        <a asp-action="Index" asp-route-page="@(Model.Page - 1)" asp-route-search="@Model.Search"
+                           asp-route-status="@Model.Status" asp-route-sortBy="@Model.SortBy" asp-route-sortDir="@Model.SortDir"
+                           class="btn btn-outline-secondary btn-sm">Trước</a>
+                    }
+                    @if (Model.Page < totalPages)
+                    {
+                        <a asp-action="Index" asp-route-page="@(Model.Page + 1)" asp-route-search="@Model.Search"
+                           asp-route-status="@Model.Status" asp-route-sortBy="@Model.SortBy" asp-route-sortDir="@Model.SortDir"
+                           class="btn btn-outline-secondary btn-sm">Sau</a>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>

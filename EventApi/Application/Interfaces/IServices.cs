@@ -42,3 +42,18 @@ public interface IOrganizerService
     Task<Result<OrganizerDto>> UpdateAsync(int id, UpdateOrganizerDto request);
     Task<Result<object>> DeleteAsync(int id);
 }
+
+public interface IEventService
+{
+    Task<Result<PagedResult<EventListItemDto>>> GetAllAsync(EventQueryParams query, string? userRole);
+    Task<Result<EventDetailDto>> GetByIdAsync(int id, string? userRole);
+    Task<Result<EventDetailDto>> CreateAsync(CreateEventDto request, int userId);
+    Task<Result<EventDetailDto>> UpdateAsync(int id, UpdateEventDto request, string userRole);
+}
+
+public interface IReportService
+{
+    Task<Result<EventReportDto>> GetEventReportAsync(int eventId);
+    Task<Result<PagedResult<EventReportDto>>> GetEventsReportAsync(string? status, int page, int pageSize);
+    Task<Result<OverviewReportDto>> GetOverviewAsync();
+}

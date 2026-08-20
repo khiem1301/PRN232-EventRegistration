@@ -1,0 +1,70 @@
+@model EventRegistration.WebClient.Models.EventDetailViewModel
+@{ ViewData["Title"] = "Manage Event"; }
+
+<div class="page-header d-flex flex-wrap justify-content-between align-items-end gap-3">
+    <div>
+        <h1><i class="bi bi-gear me-2 text-primary"></i>Quản lý Event</h1>
+        <p class="subtitle">@Model.Title — <span class="badge bg-light text-dark border">@Model.Status</span></p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Chi tiết</a>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">Sửa lịch</a>
+    </div>
+</div>
+
+<div class="card-app mb-4">
+    <div class="card-body">
+        <h5 class="mb-3"><i class="bi bi-clock-history me-1"></i>Trạng thái tự động theo thời gian</h5>
+        <p class="text-muted mb-3">
+            Hệ thống <strong>không cho chỉnh Status bằng tay</strong>. Trạng thái được tính từ
+            <em>Hạn đăng ký</em>, <em>Thời gian bắt đầu</em> và <em>Thời gian kết thúc</em> khi tạo/sửa event.
+        </p>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered mb-0">
+                <thead class="table-light">
+                    <tr><th>Điều kiện (so với hiện tại)</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                    <tr class="@(Model.Status == "Draft" ? "table-warning" : "")">
+                        <td>Trước hạn đăng ký</td><td><strong>Draft</strong> — chỉ Staff/Admin thấy</td>
+                    </tr>
+                    <tr class="@(Model.Status == "Published" ? "table-warning" : "")">
+                        <td>Từ hạn đăng ký → trước giờ bắt đầu</td><td><strong>Published</strong> — công khai</td>
+                    </tr>
+                    <tr class="@(Model.Status == "Ongoing" ? "table-warning" : "")">
+                        <td>Đang trong khung giờ sự kiện</td><td><strong>Ongoing</strong></td>
+                    </tr>
+                    <tr class="@(Model.Status == "Completed" ? "table-warning" : "")">
+                        <td>Sau giờ kết thúc</td><td><strong>Completed</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card-app">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <small class="text-muted">Hạn đăng ký</small>
+                <div class="fw-medium">@Model.RegistrationDeadline.ToString("dd/MM/yyyy HH:mm")</div>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted">Bắt đầu</small>
+                <div class="fw-medium">@Model.StartTime.ToString("dd/MM/yyyy HH:mm")</div>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted">Kết thúc</small>
+                <div class="fw-medium">@Model.EndTime.ToString("dd/MM/yyyy HH:mm")</div>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted">Đăng ký / Còn trống</small>
+                <div class="fw-medium">@Model.RegisteredCount / @Model.Capacity — còn @Model.AvailableSlots</div>
+            </div>
+        </div>
+        <p class="text-muted small mt-3 mb-0">
+            Muốn đổi trạng thái? Sửa thời gian trong <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> — hệ thống tự cập nhật khi tải lại trang.
+        </p>
+    </div>
+</div>
