@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option csharp_namespace = "EventApi.Protos";
+
+package notification;
+
+service NotificationService {
+  rpc SendRegistrationConfirmation (RegistrationNotificationRequest) returns (RegistrationNotificationReply);
+}
+
+message RegistrationNotificationRequest {
+  int32 eventId = 1;
+  string eventTitle = 2;
+  string userName = 3;
+  string userEmail = 4;
+}
+
+message RegistrationNotificationReply {
+  bool success = 1;
+  string message = 2;
+}

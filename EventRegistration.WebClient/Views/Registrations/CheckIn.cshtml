@@ -1,0 +1,64 @@
+@model List<EventRegistration.WebClient.Models.RegistrationViewModel>
+@{
+    ViewData["Title"] = "Check-in";
+}
+
+<div class="page-header">
+    <h1>Check-in / Mark No-show</h1>
+    <p class="subtitle">Danh sách người đăng ký đang chờ xử lý</p>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-app alert-info">Không có đăng ký nào trong hệ thống.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Event</th>
+                    <th>Status</th>
+                    <th>Registered At</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.StudentName</td>
+                        <td>@item.EventTitle</td>
+                        <td>
+                            <span class="badge @(item.Status == "NoShow" ? "bg-warning" : item.Status == "Attended" ? "bg-success" : "bg-primary")">
+                                @item.Status
+                            </span>
+                        </td>
+                        <td>@item.RegisteredAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            @if (item.Status != "Attended" && item.Status != "NoShow")
+                            {
+                                <form asp-action="CheckIn" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <input type="hidden" name="status" value="Attended" />
+                                    <button type="submit" class="btn btn-sm btn-success">Check-in</button>
+                                </form>
+                                <form asp-action="CheckIn" method="post" class="d-inline ms-2">
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <input type="hidden" name="status" value="NoShow" />
+                                    <button type="submit" class="btn btn-sm btn-warning">NoShow</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Processed</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

@@ -1,0 +1,42 @@
+@model EventRegistration.WebClient.Models.CreateFeedbackViewModel
+@{
+    ViewData["Title"] = "Submit Feedback";
+}
+
+<div class="page-header">
+    <h1>Submit Feedback</h1>
+    <p class="subtitle">@Model.EventTitle</p>
+</div>
+
+<form asp-action="Create" method="post" class="card-app p-4">
+    <input type="hidden" asp-for="EventId" />
+    <input type="hidden" asp-for="EventTitle" />
+
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="mb-3">
+        <label asp-for="Rating" class="form-label">Rating</label>
+        <select asp-for="Rating" class="form-select">
+            <option value="5">5 - Excellent</option>
+            <option value="4">4 - Good</option>
+            <option value="3">3 - Average</option>
+            <option value="2">2 - Poor</option>
+            <option value="1">1 - Very Poor</option>
+        </select>
+        <span asp-validation-for="Rating" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Comment" class="form-label">Comment</label>
+        <textarea asp-for="Comment" class="form-control" rows="5" placeholder="Share your feedback..."></textarea>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Submit</button>
+        <a asp-controller="Registrations" asp-action="Index" class="btn btn-outline-secondary">Back</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

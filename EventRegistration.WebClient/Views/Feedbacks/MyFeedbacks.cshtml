@@ -1,0 +1,34 @@
+@model List<EventRegistration.WebClient.Models.FeedbackViewModel>
+@{
+    ViewData["Title"] = "My Feedbacks";
+}
+
+<div class="page-header">
+    <h1>My Feedbacks</h1>
+    <p class="subtitle">Đánh giá của bạn về các sự kiện đã tham gia</p>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-app alert-info">Bạn chưa gửi feedback nào.</div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-6">
+                <div class="card-app h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <strong>@item.EventTitle</strong>
+                            <span class="badge bg-warning text-dark">@item.Rating/5</span>
+                        </div>
+                        <p class="text-muted small mb-2">@item.SubmittedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                        <p class="mb-0">@(string.IsNullOrWhiteSpace(item.Comment) ? "No comment." : item.Comment)</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

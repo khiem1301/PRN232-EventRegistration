@@ -1,0 +1,63 @@
+@model List<EventRegistration.WebClient.Models.RegistrationViewModel>
+@{
+    ViewData["Title"] = "My Tickets";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h1>My Tickets</h1>
+        <p class="subtitle">Danh sách sự kiện bạn đã đăng ký</p>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-app alert-info">Bạn chưa đăng ký sự kiện nào.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Event</th>
+                    <th>Status</th>
+                    <th>Registered</th>
+                    <th>Checked In</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <a asp-controller="Events" asp-action="Details" asp-route-id="@item.EventId">@item.EventTitle</a>
+                        </td>
+                        <td>
+                            <span class="badge @(item.Status == "Cancelled" ? "bg-danger" : item.Status == "Attended" ? "bg-success" : "bg-primary")">
+                                @item.Status
+                            </span>
+                        </td>
+                        <td>@item.RegisteredAt.ToString("dd/MM/yyyy")</td>
+                        <td>@(item.CheckedInAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                        <td>
+                            @if (item.Status != "Cancelled")
+                            {
+                                <form asp-action="Cancel" method="post" class="d-inline">
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <input type="hidden" name="eventId" value="@item.EventId" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                                </form>
+                            }
+                            @if (item.Status == "Attended")
+                            {
+                                <a class="btn btn-sm btn-outline-success ms-2" asp-controller="Feedbacks" asp-action="Create" asp-route-eventId="@item.EventId" asp-route-eventTitle="@item.EventTitle">Feedback</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

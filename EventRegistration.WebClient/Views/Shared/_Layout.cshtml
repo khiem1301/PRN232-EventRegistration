@@ -50,6 +50,16 @@
                         @if (Context.Session.GetString("JwtToken") != null)
                         {
                             <li class="nav-item">
+                                <a class="nav-link" asp-controller="Registrations" asp-action="Index">
+                                    <i class="bi bi-ticket-perforated me-1"></i>My Tickets
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Feedbacks" asp-action="MyFeedbacks">
+                                    <i class="bi bi-chat-square-text me-1"></i>My Feedbacks
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link" asp-controller="Account" asp-action="Index">
                                     <i class="bi bi-person-circle me-1"></i>Profile
                                 </a>
@@ -59,6 +69,14 @@
                                 <li class="nav-item">
                                     <a class="nav-link" asp-controller="Users" asp-action="Index">
                                         <i class="bi bi-shield-lock me-1"></i>Users
+                                    </a>
+                                </li>
+                            }
+                            @if (Context.Session.GetString("UserRole") is "Staff" or "Admin")
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Registrations" asp-action="CheckIn">
+                                        <i class="bi bi-clipboard-check me-1"></i>Check-in
                                     </a>
                                 </li>
                             }
