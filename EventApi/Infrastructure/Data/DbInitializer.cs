@@ -25,6 +25,7 @@ public static class DbInitializer
         await SeedCatalogAsync(context);
         await SeedEventsAsync(context);
         await SeedUc12DemoDataAsync(context);
+        await RepairPublishedRegistrationWindowsAsync(context);
     }
 
     private static async Task SeedUsersAsync(AppDbContext context)
@@ -185,9 +186,9 @@ public static class DbInitializer
             {
                 Title = "Campus Music Festival",
                 Description = "Annual outdoor music festival",
-                StartTime = now.AddDays(-1),
-                EndTime = now.AddDays(-1).AddHours(6),
-                RegistrationDeadline = now.AddDays(-3),
+                StartTime = now.AddHours(-1),
+                EndTime = now.AddHours(5),
+                RegistrationDeadline = now.AddDays(-2),
                 Capacity = 800,
                 Status = "Ongoing",
                 LocationId = outdoor!.Id,
@@ -229,7 +230,54 @@ public static class DbInitializer
     }
 
     /// <summary>
-    /// Demo data — mỗi event có thời gian map sang 1 status (tự động).
+    /// Existing DBs may still have Draft events that were auto-demoted by the old
+    /// deadline-based workflow, or Published demos whose deadline is already past.
+    /// </summary>
+    private static async Task RepairPublishedRegistrationWindowsAsync(AppDbContext context)
+    {
+        var now = DateTime.UtcNow;
+        var changed = false;
+
+        var freshman = await context.Events.FirstOrDefaultAsync(e => e.Title == "Freshman Orientation 2026");
+        if (freshman is not null && freshman.Status == "Draft" && freshman.StartTime > now)
+        {
+            freshman.Status = "Published";
+            changed = true;
+        }
+
+        var publishedDemos = await context.Events
+            .Where(e => e.Title.StartsWith("[DEMO AUTO] Published"))
+            .ToListAsync();
+
+        foreach (var evt in publishedDemos)
+        {
+            if (evt.Status == "Draft" && evt.StartTime > now)
+            {
+                evt.Status = "Published";
+                changed = true;
+            }
+
+            if (evt.Status == "Published" && evt.StartTime > now && evt.RegistrationDeadline < now)
+            {
+                var deadline = now.AddDays(5);
+                evt.RegistrationDeadline = deadline > evt.StartTime ? evt.StartTime : deadline;
+                changed = true;
+            }
+        }
+
+        if (changed)
+            await context.SaveChangesAsync();
+
+        var cancelled = await context.Events.FirstOrDefaultAsync(e => e.Title == "Cancelled Seminar");
+        if (cancelled is not null && cancelled.Status != "Cancelled")
+        {
+            cancelled.Status = "Cancelled";
+            await context.SaveChangesAsync();
+        }
+    }
+
+    /// <summary>
+    /// Demo data — Draft stays draft until Publish; Published can be registered.
     /// </summary>
     private static async Task SeedUc12DemoDataAsync(AppDbContext context)
     {
@@ -251,12 +299,13 @@ public static class DbInitializer
 
         var draft = new Event
         {
-            Title = $"{prefix} Draft — trước hạn đăng ký",
-            Description = "now < RegistrationDeadline → Draft (chỉ Staff/Admin thấy).",
+            Title = $"{prefix} Draft — chưa publish",
+            Description = "Draft cho đến khi Staff bấm Publish. Student chưa thấy và chưa đăng ký được.",
             StartTime = now.AddDays(20),
             EndTime = now.AddDays(20).AddHours(3),
             RegistrationDeadline = now.AddDays(5),
             Capacity = 50,
+            Status = "Draft",
             LocationId = location.Id,
             OrganizerId = organizer.Id,
             CreatedById = staff.Id,
@@ -265,12 +314,13 @@ public static class DbInitializer
 
         var published = new Event
         {
-            Title = $"{prefix} Published — đang mở, chờ bắt đầu",
-            Description = "RegistrationDeadline <= now < StartTime → Published. Có 2 đăng ký.",
+            Title = $"{prefix} Published — đang mở đăng ký",
+            Description = "Published + hạn đăng ký còn hiệu lực. Student có thể đăng ký.",
             StartTime = now.AddDays(10),
             EndTime = now.AddDays(10).AddHours(2),
-            RegistrationDeadline = now.AddDays(-1),
+            RegistrationDeadline = now.AddDays(5),
             Capacity = 50,
+            Status = "Published",
             LocationId = location.Id,
             OrganizerId = organizer.Id,
             CreatedById = staff.Id,
@@ -288,7 +338,8 @@ public static class DbInitializer
             LocationId = location.Id,
             OrganizerId = organizer.Id,
             CreatedById = staff.Id,
-            CreatedAt = now.AddDays(-7)
+            CreatedAt = now.AddDays(-7),
+            Status = "Ongoing"
         };
 
         var completed = new Event
@@ -299,17 +350,16 @@ public static class DbInitializer
             EndTime = now.AddDays(-14).AddHours(2),
             RegistrationDeadline = now.AddDays(-16),
             Capacity = 80,
+            Status = "Completed",
             LocationId = location.Id,
             OrganizerId = organizer.Id,
             CreatedById = staff.Id,
             CreatedAt = now.AddDays(-30)
         };
 
-        foreach (var evt in new[] { draft, published, ongoing, completed })
-            EventWorkflow.ApplyResolvedStatus(evt);
-
         context.Events.AddRange(draft, published, ongoing, completed);
         await context.SaveChangesAsync();
+        await EventWorkflow.SyncAllAsync(context);
 
         if (student1 is not null)
         {

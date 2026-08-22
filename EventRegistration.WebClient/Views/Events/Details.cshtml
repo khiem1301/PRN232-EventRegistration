@@ -58,11 +58,18 @@
                 </div>
                 @{
                     var fillPct = Model.Capacity > 0 ? (double)Model.RegisteredCount / Model.Capacity * 100 : 0;
+                    var deadlinePassed = Model.RegistrationDeadline < DateTime.UtcNow;
                 }
                 <div class="progress" style="height: 8px;">
                     <div class="progress-bar" style="width: @fillPct%"></div>
                 </div>
-                @if (isLoggedIn && Model.Status == "Published")
+                @if (!isLoggedIn)
+                {
+                    <div class="mt-3">
+                        <a asp-controller="Auth" asp-action="Login" class="btn btn-outline-primary w-100">Login to register</a>
+                    </div>
+                }
+                else if (Model.Status == "Published" && !deadlinePassed)
                 {
                     <div class="mt-3 d-grid gap-2">
                         <form asp-controller="Registrations" asp-action="Register" method="post">
@@ -73,16 +80,16 @@
                         </form>
                     </div>
                 }
+                else if (isLoggedIn && Model.Status == "Published" && deadlinePassed)
+                {
+                    <div class="mt-3 alert alert-warning mb-0">
+                        Hạn đăng ký đã hết. Sự kiện vẫn công khai nhưng không nhận đăng ký mới.
+                    </div>
+                }
                 else if (isLoggedIn)
                 {
                     <div class="mt-3 alert alert-secondary mb-0">
-                        Đăng ký chỉ mở cho sự kiện ở trạng thái Published.
-                    </div>
-                }
-                else
-                {
-                    <div class="mt-3">
-                        <a asp-controller="Auth" asp-action="Login" class="btn btn-outline-primary w-100">Login to register</a>
+                        Đăng ký chỉ mở khi sự kiện ở trạng thái Published và còn hạn đăng ký.
                     </div>
                 }
             </div>

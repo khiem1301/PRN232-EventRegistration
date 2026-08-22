@@ -82,7 +82,7 @@ public class EventsController : Controller
             return View(model);
         }
 
-        TempData["Success"] = "Event created successfully.";
+        TempData["Success"] = "Event created as Draft. Publish it from Manage to open registration.";
         return RedirectToAction(nameof(Details), new { id = result.Data!.Id });
     }
 
@@ -139,6 +139,22 @@ public class EventsController : Controller
         return RedirectToAction(nameof(Details), new { id = model.Id });
     }
 
+    [HttpPost]
+    public async Task<IActionResult> Publish(int id) =>
+        await TransitionAsync(id, "publish", "Event published. Students can register until the deadline.");
+
+    [HttpPost]
+    public async Task<IActionResult> Start(int id) =>
+        await TransitionAsync(id, "start", "Event marked as ongoing.");
+
+    [HttpPost]
+    public async Task<IActionResult> Complete(int id) =>
+        await TransitionAsync(id, "complete", "Event completed.");
+
+    [HttpPost]
+    public async Task<IActionResult> Cancel(int id) =>
+        await TransitionAsync(id, "cancel", "Event cancelled.");
+
     [HttpGet]
     public async Task<IActionResult> Manage(int id)
     {
@@ -147,6 +163,17 @@ public class EventsController : Controller
         var evt = await _api.GetAsync<EventDetailViewModel>($"/api/events/{id}");
         if (evt is null) return NotFound();
         return View(evt);
+    }
+
+    private async Task<IActionResult> TransitionAsync(int id, string action, string successMessage)
+    {
+        if (!CanManage) return RedirectToAction("Login", "Auth");
+
+        var result = await _api.PostAsync<EventDetailViewModel>($"/api/events/{id}/{action}", new { });
+        TempData[result.Success ? "Success" : "Error"] = result.Success
+            ? successMessage
+            : result.Error ?? "Status change failed.";
+        return RedirectToAction(nameof(Manage), new { id });
     }
 
     private async Task<CreateEventViewModel> BuildCreateViewModel(CreateEventViewModel model)

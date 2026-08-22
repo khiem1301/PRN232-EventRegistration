@@ -1,5 +1,6 @@
 using EventApi.Application.DTOs;
 using EventApi.Application.Interfaces;
+using EventApi.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -37,4 +38,24 @@ public class EventsController : ApiControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateEventDto request) =>
         ToActionResult(await _eventService.UpdateAsync(id, request, GetCurrentUserRole() ?? "Staff"));
+
+    [Authorize(Roles = "Staff,Admin")]
+    [HttpPost("{id:int}/publish")]
+    public async Task<IActionResult> Publish(int id) =>
+        ToActionResult(await _eventService.ChangeStatusAsync(id, nameof(EventStatus.Published), GetCurrentUserRole() ?? "Staff"));
+
+    [Authorize(Roles = "Staff,Admin")]
+    [HttpPost("{id:int}/start")]
+    public async Task<IActionResult> Start(int id) =>
+        ToActionResult(await _eventService.ChangeStatusAsync(id, nameof(EventStatus.Ongoing), GetCurrentUserRole() ?? "Staff"));
+
+    [Authorize(Roles = "Staff,Admin")]
+    [HttpPost("{id:int}/complete")]
+    public async Task<IActionResult> Complete(int id) =>
+        ToActionResult(await _eventService.ChangeStatusAsync(id, nameof(EventStatus.Completed), GetCurrentUserRole() ?? "Staff"));
+
+    [Authorize(Roles = "Staff,Admin")]
+    [HttpPost("{id:int}/cancel")]
+    public async Task<IActionResult> Cancel(int id) =>
+        ToActionResult(await _eventService.ChangeStatusAsync(id, nameof(EventStatus.Cancelled), GetCurrentUserRole() ?? "Staff"));
 }

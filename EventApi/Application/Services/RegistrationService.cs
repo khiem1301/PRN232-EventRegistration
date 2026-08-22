@@ -2,6 +2,7 @@ using EventApi.Application.DTOs;
 using EventApi.Application.Interfaces;
 using EventApi.Domain.Common;
 using EventApi.Domain.Entities;
+using EventApi.Domain.Enums;
 using EventApi.Infrastructure.Data;
 using EventApi.Protos;
 using Grpc.Net.Client;
@@ -90,10 +91,12 @@ public class RegistrationService : IRegistrationService
         if (evt is null)
             return Result<RegistrationDto>.Fail("Event not found.", 404);
 
-        if (evt.Status == "Cancelled")
+        await SyncEventStatusAsync(evt);
+
+        if (evt.Status == nameof(EventStatus.Cancelled))
             return Result<RegistrationDto>.Fail("This event has been cancelled.", 400);
 
-        if (evt.Status != "Published")
+        if (evt.Status != nameof(EventStatus.Published))
             return Result<RegistrationDto>.Fail("Event is not open for registration.", 400);
 
         var now = DateTime.UtcNow;
@@ -188,6 +191,8 @@ public class RegistrationService : IRegistrationService
         if (registration is null)
             return Result<RegistrationDto>.Fail("Registration not found.", 404);
 
+        await SyncEventStatusAsync(registration.Event);
+
         if (registration.Status == "Cancelled")
             return Result<RegistrationDto>.Fail("Cannot check in a cancelled registration.", 400);
 
@@ -196,7 +201,7 @@ public class RegistrationService : IRegistrationService
 
         if (request.Status == "Attended")
         {
-            if (registration.Event.Status is not ("Published" or "Ongoing"))
+            if (registration.Event.Status is not (nameof(EventStatus.Published) or nameof(EventStatus.Ongoing)))
                 return Result<RegistrationDto>.Fail("Check-in is available only for published or ongoing events.", 400);
 
             registration.Status = "Attended";
@@ -213,6 +218,14 @@ public class RegistrationService : IRegistrationService
 
         await _context.SaveChangesAsync();
         return Result<RegistrationDto>.Success(MapToDto(registration));
+    }
+
+    private async Task SyncEventStatusAsync(Event evt)
+    {
+        var before = evt.Status;
+        EventWorkflow.ApplyResolvedStatus(evt);
+        if (before != evt.Status)
+            await _context.SaveChangesAsync();
     }
 
     private async Task SendRegistrationNotificationAsync(int eventId, string eventTitle, int studentId)
