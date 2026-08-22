@@ -153,10 +153,9 @@ public class EventService : IEventService
             LocationId = request.LocationId,
             OrganizerId = request.OrganizerId,
             CreatedById = userId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            Status = nameof(EventStatus.Draft)
         };
-
-        EventWorkflow.ApplyResolvedStatus(evt);
 
         await _uow.Repository<Event>().AddAsync(evt);
         await _uow.SaveChangesAsync();
@@ -181,8 +180,9 @@ public class EventService : IEventService
 
         await SyncEventStatusAsync(evt);
 
-        if (evt.Status is nameof(EventStatus.Completed) && userRole != "Admin")
-            return Result<EventDetailDto>.Fail("Only Admin can edit completed events.", 403);
+        if (evt.Status is nameof(EventStatus.Completed) or nameof(EventStatus.Cancelled)
+            && userRole != "Admin")
+            return Result<EventDetailDto>.Fail("Only Admin can edit completed or cancelled events.", 403);
 
         var scheduleResult = EventWorkflow.ValidateSchedule(
             request.StartTime, request.EndTime, request.RegistrationDeadline);
@@ -214,6 +214,35 @@ public class EventService : IEventService
         evt.LocationId = request.LocationId;
         evt.OrganizerId = request.OrganizerId;
 
+        EventWorkflow.ApplyResolvedStatus(evt);
+
+        _uow.Repository<Event>().Update(evt);
+        await _uow.SaveChangesAsync();
+
+        return Result<EventDetailDto>.Success(MapToDetailDto(evt));
+    }
+
+    public async Task<Result<EventDetailDto>> ChangeStatusAsync(int id, string targetStatus, string userRole)
+    {
+        if (!IsStaffOrAdmin(userRole))
+            return Result<EventDetailDto>.Fail("Unauthorized.", 403);
+
+        var evt = await _context.Events
+            .Include(e => e.Location)
+            .Include(e => e.Organizer)
+            .Include(e => e.Registrations)
+            .FirstOrDefaultAsync(e => e.Id == id);
+
+        if (evt is null)
+            return Result<EventDetailDto>.Fail("Event not found.", 404);
+
+        await SyncEventStatusAsync(evt);
+
+        var transition = EventWorkflow.ValidateTransition(evt.Status, targetStatus);
+        if (!transition.IsSuccess)
+            return Result<EventDetailDto>.Fail(transition.Error!, transition.StatusCode);
+
+        evt.Status = targetStatus;
         EventWorkflow.ApplyResolvedStatus(evt);
 
         _uow.Repository<Event>().Update(evt);

@@ -14,31 +14,80 @@
 
 <div class="card-app mb-4">
     <div class="card-body">
-        <h5 class="mb-3"><i class="bi bi-clock-history me-1"></i>Trạng thái tự động theo thời gian</h5>
+        <h5 class="mb-3"><i class="bi bi-diagram-3 me-1"></i>Vòng đời sự kiện (BR-E-01)</h5>
         <p class="text-muted mb-3">
-            Hệ thống <strong>không cho chỉnh Status bằng tay</strong>. Trạng thái được tính từ
-            <em>Hạn đăng ký</em>, <em>Thời gian bắt đầu</em> và <em>Thời gian kết thúc</em> khi tạo/sửa event.
+            <strong>Draft → Published</strong> do Staff/Admin bấm Publish.
+            Sau đó hệ thống tự chuyển <strong>Published → Ongoing</strong> khi tới giờ bắt đầu,
+            và <strong>Ongoing → Completed</strong> khi hết giờ. Hạn đăng ký chỉ quyết định student còn đăng ký được hay không.
         </p>
         <div class="table-responsive">
             <table class="table table-sm table-bordered mb-0">
                 <thead class="table-light">
-                    <tr><th>Điều kiện (so với hiện tại)</th><th>Status</th></tr>
+                    <tr><th>Trạng thái</th><th>Ý nghĩa</th></tr>
                 </thead>
                 <tbody>
                     <tr class="@(Model.Status == "Draft" ? "table-warning" : "")">
-                        <td>Trước hạn đăng ký</td><td><strong>Draft</strong> — chỉ Staff/Admin thấy</td>
+                        <td><strong>Draft</strong></td>
+                        <td>Chưa công khai — chỉ Staff/Admin thấy. Student chưa đăng ký được.</td>
                     </tr>
                     <tr class="@(Model.Status == "Published" ? "table-warning" : "")">
-                        <td>Từ hạn đăng ký → trước giờ bắt đầu</td><td><strong>Published</strong> — công khai</td>
+                        <td><strong>Published</strong></td>
+                        <td>Công khai. Student đăng ký được nếu còn hạn và còn chỗ.</td>
                     </tr>
                     <tr class="@(Model.Status == "Ongoing" ? "table-warning" : "")">
-                        <td>Đang trong khung giờ sự kiện</td><td><strong>Ongoing</strong></td>
+                        <td><strong>Ongoing</strong></td>
+                        <td>Đã tới giờ bắt đầu — tự chuyển. Không nhận đăng ký mới.</td>
                     </tr>
                     <tr class="@(Model.Status == "Completed" ? "table-warning" : "")">
-                        <td>Sau giờ kết thúc</td><td><strong>Completed</strong></td>
+                        <td><strong>Completed</strong></td>
+                        <td>Đã tới giờ kết thúc — tự chuyển. Chỉ Admin sửa được.</td>
+                    </tr>
+                    <tr class="@(Model.Status == "Cancelled" ? "table-warning" : "")">
+                        <td><strong>Cancelled</strong></td>
+                        <td>Hủy thủ công từ Draft / Published / Ongoing. Không tự đổi lại.</td>
                     </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<div class="card-app mb-4">
+    <div class="card-body">
+        <h5 class="mb-3">Thao tác</h5>
+        <div class="d-flex flex-wrap gap-2">
+            @if (Model.Status == "Draft")
+            {
+                <form asp-action="Publish" method="post">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-primary">Publish</button>
+                </form>
+            }
+            @if (Model.Status == "Published")
+            {
+                <form asp-action="Start" method="post">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-outline-primary">Start</button>
+                </form>
+            }
+            @if (Model.Status == "Ongoing")
+            {
+                <form asp-action="Complete" method="post">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-outline-primary">Complete</button>
+                </form>
+            }
+            @if (Model.Status is "Draft" or "Published" or "Ongoing")
+            {
+                <form asp-action="Cancel" method="post" onsubmit="return confirm('Cancel this event?');">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-outline-danger">Cancel</button>
+                </form>
+            }
+            @if (Model.Status is "Completed" or "Cancelled")
+            {
+                <p class="text-muted mb-0">Không còn thao tác chuyển trạng thái.</p>
+            }
         </div>
     </div>
 </div>
@@ -63,8 +112,5 @@
                 <div class="fw-medium">@Model.RegisteredCount / @Model.Capacity — còn @Model.AvailableSlots</div>
             </div>
         </div>
-        <p class="text-muted small mt-3 mb-0">
-            Muốn đổi trạng thái? Sửa thời gian trong <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> — hệ thống tự cập nhật khi tải lại trang.
-        </p>
     </div>
 </div>

@@ -1,38 +1,48 @@
-# Trạng thái Event — Tự động theo thời gian
+# Trạng thái Event
 
-> Status **không chỉnh bằng tay** (đã bỏ nút Publish/Start/Complete/Cancel).  
-> Hệ thống tính từ 3 mốc thời gian khi tạo/sửa event.
+> **Draft → Published** do Staff/Admin bấm Publish.  
+> Sau đó hệ thống tự chuyển **Published → Ongoing → Completed** theo `StartTime` / `EndTime` (UTC).  
+> `RegistrationDeadline` **không** đổi status — chỉ quyết định student còn đăng ký được hay không.  
+> **Cancelled** không bị ghi đè.
 
-## Quy tắc (UTC)
+## Quy tắc
 
-| Điều kiện | Status | Ai thấy? |
-|-----------|--------|----------|
-| `now < RegistrationDeadline` | **Draft** | Chỉ Staff/Admin |
-| `RegistrationDeadline ≤ now < StartTime` | **Published** | Mọi user |
-| `StartTime ≤ now < EndTime` | **Ongoing** | Mọi user |
-| `now ≥ EndTime` | **Completed** | Mọi user |
+| Điều kiện | Status | Ai thấy? | Student đăng ký? |
+|-----------|--------|----------|------------------|
+| Chưa Publish | **Draft** | Chỉ Staff/Admin | Không |
+| Đã Publish và `now < StartTime` | **Published** | Mọi user | Có, nếu còn hạn và còn chỗ |
+| `StartTime ≤ now < EndTime` | **Ongoing** | Mọi user | Không |
+| `now ≥ EndTime` | **Completed** | Mọi user | Không |
+| Staff/Admin Cancel | **Cancelled** | Chỉ Staff/Admin | Không |
 
 ```
-Timeline:  ----[Draft]----|----[Published]----|----[Ongoing]----|----[Completed]----
-                          ↑ Hạn ĐK            ↑ Start           ↑ End
+Timeline:  --[Draft]--|----[Published, mở ĐK]----|----[Published, hết hạn]----|----[Ongoing]----|----[Completed]
+                      ↑ Publish                   ↑ Hạn ĐK                     ↑ Start           ↑ End
 ```
 
-## Cách đổi trạng thái
+## Thao tác thủ công (Manage)
 
-**Sửa thời gian** trong form Edit (hoặc PUT `/api/events/{id}`), rồi tải lại trang — status tự cập nhật.
+| Action | From → To |
+|--------|-----------|
+| Publish | Draft → Published |
+| Start | Published → Ongoing (tùy chọn; hệ thống cũng tự chuyển khi tới StartTime) |
+| Complete | Ongoing → Completed (tùy chọn; hệ thống cũng tự chuyển khi tới EndTime) |
+| Cancel | Draft / Published / Ongoing → Cancelled |
 
-Ví dụ muốn event **Published** ngay:
-- Đặt `RegistrationDeadline` ≤ thời điểm hiện tại
-- Đặt `StartTime` ở tương lai
+## Cách mở đăng ký cho student
+
+1. Tạo event (mặc định **Draft**)
+2. Đặt `RegistrationDeadline` **ở tương lai** và `≤ StartTime`
+3. Vào **Manage** → **Publish**
 
 ## Demo data `[DEMO AUTO]`
 
-Restart EventApi để seed (nếu chưa có). Tìm trên Events:
+Restart EventApi để seed/repair. Tìm trên Events:
 
 | Event | Status mong đợi |
 |-------|-----------------|
-| Draft — trước hạn đăng ký | Draft |
-| Published — đang mở | Published |
+| Draft — chưa publish | Draft |
+| Published — đang mở đăng ký | Published (student đăng ký được) |
 | Ongoing — đang diễn ra | Ongoing |
 | Completed — đã kết thúc | Completed |
 
@@ -42,3 +52,4 @@ Restart EventApi để seed (nếu chưa có). Tìm trên Events:
 |-------|----------|
 | staff@fpt.edu.vn | Staff@123 |
 | admin@fpt.edu.vn | Admin@123 |
+| student@fpt.edu.vn | Student@123 |

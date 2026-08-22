@@ -15,16 +15,23 @@ public static class EventWorkflow
     ];
 
     /// <summary>
-    /// Trạng thái tự động theo thời gian đã nhập khi tạo/sửa event (UTC).
-    /// Draft: trước hạn đăng ký | Published: từ hạn ĐK đến StartTime | Ongoing | Completed
+    /// Auto-advance by time only. Draft stays Draft until Staff publishes.
+    /// Cancelled and Completed are sticky. RegistrationDeadline is not used for status.
+    /// Published → Ongoing at StartTime → Completed at EndTime.
     /// </summary>
     public static string ResolveStatusByTime(
+        string currentStatus,
         DateTime startTime,
         DateTime endTime,
-        DateTime registrationDeadline,
         DateTime? utcNow = null)
     {
         var now = utcNow ?? DateTime.UtcNow;
+
+        if (currentStatus is nameof(EventStatus.Draft) or nameof(EventStatus.Cancelled))
+            return currentStatus;
+
+        if (currentStatus == nameof(EventStatus.Completed))
+            return nameof(EventStatus.Completed);
 
         if (now >= endTime)
             return nameof(EventStatus.Completed);
@@ -32,10 +39,10 @@ public static class EventWorkflow
         if (now >= startTime)
             return nameof(EventStatus.Ongoing);
 
-        if (now >= registrationDeadline)
-            return nameof(EventStatus.Published);
+        if (currentStatus == nameof(EventStatus.Ongoing))
+            return nameof(EventStatus.Ongoing);
 
-        return nameof(EventStatus.Draft);
+        return nameof(EventStatus.Published);
     }
 
     public static void ApplyResolvedStatus(
@@ -43,10 +50,29 @@ public static class EventWorkflow
         DateTime? utcNow = null)
     {
         evt.Status = ResolveStatusByTime(
+            evt.Status,
             evt.StartTime,
             evt.EndTime,
-            evt.RegistrationDeadline,
             utcNow);
+    }
+
+    public static Result<object> ValidateTransition(string current, string target)
+    {
+        var allowed = (current, target) switch
+        {
+            (nameof(EventStatus.Draft), nameof(EventStatus.Published)) => true,
+            (nameof(EventStatus.Published), nameof(EventStatus.Ongoing)) => true,
+            (nameof(EventStatus.Ongoing), nameof(EventStatus.Completed)) => true,
+            (nameof(EventStatus.Draft), nameof(EventStatus.Cancelled)) => true,
+            (nameof(EventStatus.Published), nameof(EventStatus.Cancelled)) => true,
+            (nameof(EventStatus.Ongoing), nameof(EventStatus.Cancelled)) => true,
+            _ => false
+        };
+
+        if (!allowed)
+            return Result<object>.Fail($"Cannot change status from {current} to {target}.", 409);
+
+        return Result<object>.Success(new { });
     }
 
     public static async Task SyncAllAsync(AppDbContext context)

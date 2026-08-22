@@ -49,6 +49,7 @@ public interface IEventService
     Task<Result<EventDetailDto>> GetByIdAsync(int id, string? userRole);
     Task<Result<EventDetailDto>> CreateAsync(CreateEventDto request, int userId);
     Task<Result<EventDetailDto>> UpdateAsync(int id, UpdateEventDto request, string userRole);
+    Task<Result<EventDetailDto>> ChangeStatusAsync(int id, string targetStatus, string userRole);
 }
 
 public interface IReportService
