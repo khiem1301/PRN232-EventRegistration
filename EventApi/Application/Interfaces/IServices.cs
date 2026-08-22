@@ -57,3 +57,20 @@ public interface IReportService
     Task<Result<PagedResult<EventReportDto>>> GetEventsReportAsync(string? status, int page, int pageSize);
     Task<Result<OverviewReportDto>> GetOverviewAsync();
 }
+
+public interface IRegistrationService
+{
+    Task<Result<IEnumerable<RegistrationDto>>> GetMyRegistrationsAsync(int studentId);
+    Task<Result<IEnumerable<RegistrationDto>>> GetEventRegistrationsAsync(int eventId, string? userRole);
+    Task<Result<IEnumerable<RegistrationDto>>> MarkNoShowAsync(int eventId, string userRole);
+    Task<Result<RegistrationDto>> RegisterAsync(int studentId, RegisterEventDto request);
+    Task<Result<RegistrationDto>> CancelAsync(int registrationId, int userId, string? userRole);
+    Task<Result<RegistrationDto>> CheckInAsync(int registrationId, string userRole, CheckInRegistrationDto request);
+}
+
+public interface IFeedbackService
+{
+    Task<Result<IEnumerable<FeedbackDto>>> GetEventFeedbacksAsync(int eventId);
+    Task<Result<IEnumerable<FeedbackDto>>> GetMyFeedbacksAsync(int studentId);
+    Task<Result<FeedbackDto>> SubmitAsync(int studentId, CreateFeedbackDto request);
+}

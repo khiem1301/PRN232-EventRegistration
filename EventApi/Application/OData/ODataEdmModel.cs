@@ -10,6 +10,7 @@ public static class ODataEdmModel
     {
         var builder = new ODataConventionModelBuilder();
         builder.EntitySet<EventODataDto>("Events");
+        builder.EntitySet<RegistrationODataDto>("Registrations");
         return builder.GetEdmModel();
     }
 }

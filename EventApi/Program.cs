@@ -24,6 +24,8 @@ builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<IOrganizerService, OrganizerService>();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<IRegistrationService, RegistrationService>();
+builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
