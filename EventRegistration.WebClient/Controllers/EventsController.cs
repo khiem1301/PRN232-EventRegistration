@@ -1,5 +1,6 @@
 using EventRegistration.WebClient.Models;
 using EventRegistration.WebClient.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EventRegistration.WebClient.Controllers;
@@ -9,9 +10,6 @@ public class EventsController : Controller
     private readonly EventApiClient _api;
 
     public EventsController(EventApiClient api) => _api = api;
-
-    private bool CanManage =>
-        HttpContext.Session.GetString("UserRole") is "Staff" or "Admin";
 
     [HttpGet]
     public async Task<IActionResult> Index(
@@ -52,17 +50,14 @@ public class EventsController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Create()
-    {
-        if (!CanManage) return RedirectToAction("Login", "Auth");
-        return View(await BuildCreateViewModel(new CreateEventViewModel()));
-    }
+    [Authorize(Roles = "Staff,Admin")]
+    public async Task<IActionResult> Create() =>
+        View(await BuildCreateViewModel(new CreateEventViewModel()));
 
     [HttpPost]
+    [Authorize(Roles = "Staff,Admin")]
     public async Task<IActionResult> Create(CreateEventViewModel model)
     {
-        if (!CanManage) return RedirectToAction("Login", "Auth");
-
         var result = await _api.PostAsync<EventDetailViewModel>("/api/events", new
         {
             model.Title,
@@ -87,10 +82,9 @@ public class EventsController : Controller
     }
 
     [HttpGet]
+    [Authorize(Roles = "Staff,Admin")]
     public async Task<IActionResult> Edit(int id)
     {
-        if (!CanManage) return RedirectToAction("Login", "Auth");
-
         var evt = await _api.GetAsync<EventDetailViewModel>($"/api/events/{id}");
         if (evt is null) return NotFound();
 
@@ -112,10 +106,9 @@ public class EventsController : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = "Staff,Admin")]
     public async Task<IActionResult> Edit(EditEventViewModel model)
     {
-        if (!CanManage) return RedirectToAction("Login", "Auth");
-
         var result = await _api.PutAsync<EventDetailViewModel>($"/api/events/{model.Id}", new
         {
             model.Title,
@@ -140,26 +133,29 @@ public class EventsController : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = "Staff,Admin")]
     public async Task<IActionResult> Publish(int id) =>
         await TransitionAsync(id, "publish", "Event published. Students can register until the deadline.");
 
     [HttpPost]
+    [Authorize(Roles = "Staff,Admin")]
     public async Task<IActionResult> Start(int id) =>
         await TransitionAsync(id, "start", "Event marked as ongoing.");
 
     [HttpPost]
+    [Authorize(Roles = "Staff,Admin")]
     public async Task<IActionResult> Complete(int id) =>
         await TransitionAsync(id, "complete", "Event completed.");
 
     [HttpPost]
+    [Authorize(Roles = "Staff,Admin")]
     public async Task<IActionResult> Cancel(int id) =>
         await TransitionAsync(id, "cancel", "Event cancelled.");
 
     [HttpGet]
+    [Authorize(Roles = "Staff,Admin")]
     public async Task<IActionResult> Manage(int id)
     {
-        if (!CanManage) return RedirectToAction("Login", "Auth");
-
         var evt = await _api.GetAsync<EventDetailViewModel>($"/api/events/{id}");
         if (evt is null) return NotFound();
         return View(evt);
@@ -167,8 +163,6 @@ public class EventsController : Controller
 
     private async Task<IActionResult> TransitionAsync(int id, string action, string successMessage)
     {
-        if (!CanManage) return RedirectToAction("Login", "Auth");
-
         var result = await _api.PostAsync<EventDetailViewModel>($"/api/events/{id}/{action}", new { });
         TempData[result.Success ? "Success" : "Error"] = result.Success
             ? successMessage

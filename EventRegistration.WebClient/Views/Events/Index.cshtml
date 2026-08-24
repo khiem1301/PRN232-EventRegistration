@@ -1,7 +1,7 @@
 @model EventRegistration.WebClient.Models.PagedEventsViewModel
 @{ 
     ViewData["Title"] = "Events"; 
-    var canManage = Context.Session.GetString("UserRole") is "Staff" or "Admin";
+    var canManage = User.IsInRole("Staff") || User.IsInRole("Admin");
     var totalPages = Model.PageSize > 0 ? (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize) : 0;
 }
 

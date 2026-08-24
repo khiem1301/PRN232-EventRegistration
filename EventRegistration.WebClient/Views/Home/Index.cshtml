@@ -1,7 +1,7 @@
 ﻿@{
     ViewData["Title"] = "Home";
-    var isLoggedIn = Context.Session.GetString("JwtToken") != null;
-    var role = Context.Session.GetString("UserRole");
+    var isLoggedIn = User.Identity?.IsAuthenticated == true;
+    var isAdmin = User.IsInRole("Admin");
 }
 
 <section class="hero">
@@ -22,7 +22,7 @@
             <a class="btn btn-light-hero btn-lg" asp-controller="Account" asp-action="Index">
                 <i class="bi bi-person-circle me-1"></i>Hồ sơ của tôi
             </a>
-            @if (role == "Admin")
+            @if (isAdmin)
             {
                 <a class="btn btn-outline-hero btn-lg" asp-controller="Users" asp-action="Index">
                     <i class="bi bi-shield-lock me-1"></i>Quản lý Users

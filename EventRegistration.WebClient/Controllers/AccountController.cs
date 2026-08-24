@@ -1,22 +1,23 @@
+using System.Security.Claims;
 using EventRegistration.WebClient.Models;
 using EventRegistration.WebClient.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EventRegistration.WebClient.Controllers;
 
+[Authorize]
 public class AccountController : Controller
 {
     private readonly EventApiClient _api;
 
     public AccountController(EventApiClient api) => _api = api;
 
-    private bool IsLoggedIn => !string.IsNullOrEmpty(HttpContext.Session.GetString("JwtToken"));
-
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        if (!IsLoggedIn) return RedirectToAction("Login", "Auth");
-
         var profile = await _api.GetAsync<UserViewModel>("/api/account/me");
         if (profile is null) return RedirectToAction("Login", "Auth");
 
@@ -31,8 +32,6 @@ public class AccountController : Controller
     [HttpPost]
     public async Task<IActionResult> Index(UpdateProfileViewModel model)
     {
-        if (!IsLoggedIn) return RedirectToAction("Login", "Auth");
-
         var result = await _api.PutAsync<UserViewModel>("/api/account/me", model);
         if (!result.Success)
         {
@@ -40,26 +39,32 @@ public class AccountController : Controller
             return View(model);
         }
 
-        HttpContext.Session.SetString("UserName", result.Data!.FullName);
+        var user = result.Data!;
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Name, user.FullName),
+            new(ClaimTypes.Email, user.Email),
+            new(ClaimTypes.Role, user.Role)
+        };
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            new ClaimsPrincipal(identity));
+
         TempData["Success"] = "Profile updated successfully.";
         return RedirectToAction(nameof(Index));
     }
 
     [HttpGet]
-    public IActionResult ChangePassword()
-    {
-        if (!IsLoggedIn) return RedirectToAction("Login", "Auth");
-        return View(new ChangePasswordViewModel());
-    }
+    public IActionResult ChangePassword() => View(new ChangePasswordViewModel());
 
     [HttpPost]
     public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
     {
-        if (!IsLoggedIn) return RedirectToAction("Login", "Auth");
-
         if (model.NewPassword != model.ConfirmPassword)
         {
-            ModelState.AddModelError(nameof(model.ConfirmPassword), "Passwords do not match.");
+            ModelState.AddModelError(string.Empty, "Mật khẩu xác nhận không khớp.");
             return View(model);
         }
 

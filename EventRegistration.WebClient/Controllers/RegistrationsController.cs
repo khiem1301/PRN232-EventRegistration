@@ -1,23 +1,20 @@
 using EventRegistration.WebClient.Models;
 using EventRegistration.WebClient.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EventRegistration.WebClient.Controllers;
 
+[Authorize]
 public class RegistrationsController : Controller
 {
     private readonly EventApiClient _api;
 
     public RegistrationsController(EventApiClient api) => _api = api;
 
-    private bool IsLoggedIn => !string.IsNullOrEmpty(HttpContext.Session.GetString("JwtToken"));
-    private bool CanCheckIn => HttpContext.Session.GetString("UserRole") is "Staff" or "Admin";
-
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        if (!IsLoggedIn) return RedirectToAction("Login", "Auth");
-
         var registrations = await _api.GetAsync<List<RegistrationViewModel>>("/api/registrations/me");
         return View(registrations ?? new List<RegistrationViewModel>());
     }
@@ -25,8 +22,6 @@ public class RegistrationsController : Controller
     [HttpPost]
     public async Task<IActionResult> Register(int eventId)
     {
-        if (!IsLoggedIn) return RedirectToAction("Login", "Auth");
-
         var result = await _api.PostAsync<RegistrationViewModel>("/api/registrations", new { eventId });
         if (!result.Success)
         {
@@ -41,8 +36,6 @@ public class RegistrationsController : Controller
     [HttpPost]
     public async Task<IActionResult> Cancel(int id, int eventId)
     {
-        if (!IsLoggedIn) return RedirectToAction("Login", "Auth");
-
         var result = await _api.PostAsync<RegistrationViewModel>($"/api/registrations/{id}/cancel", new { });
         if (!result.Success)
         {
@@ -55,10 +48,9 @@ public class RegistrationsController : Controller
     }
 
     [HttpGet]
+    [Authorize(Roles = "Staff,Admin")]
     public async Task<IActionResult> CheckIn()
     {
-        if (!CanCheckIn) return RedirectToAction("Login", "Auth");
-
         var pagedEvents = await _api.GetAsync<PagedEventsViewModel>("/api/events?status=&page=1&pageSize=100");
         var model = new List<RegistrationViewModel>();
 
@@ -73,10 +65,9 @@ public class RegistrationsController : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = "Staff,Admin")]
     public async Task<IActionResult> CheckIn(int id, string status)
     {
-        if (!CanCheckIn) return RedirectToAction("Login", "Auth");
-
         var result = await _api.PostAsync<RegistrationViewModel>($"/api/registrations/{id}/checkin", new { status });
         if (!result.Success)
         {
