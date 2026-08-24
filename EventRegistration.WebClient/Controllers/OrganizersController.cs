@@ -1,5 +1,6 @@
 using EventRegistration.WebClient.Models;
 using EventRegistration.WebClient.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EventRegistration.WebClient.Controllers;
@@ -10,9 +11,6 @@ public class OrganizersController : Controller
 
     public OrganizersController(EventApiClient api) => _api = api;
 
-    private bool CanManage =>
-        HttpContext.Session.GetString("UserRole") is "Staff" or "Admin";
-
     [HttpGet]
     public async Task<IActionResult> Index()
     {
@@ -21,17 +19,13 @@ public class OrganizersController : Controller
     }
 
     [HttpGet]
-    public IActionResult Create()
-    {
-        if (!CanManage) return RedirectToAction("Login", "Auth");
-        return View(new OrganizerViewModel());
-    }
+    [Authorize(Roles = "Staff,Admin")]
+    public IActionResult Create() => View(new OrganizerViewModel());
 
     [HttpPost]
+    [Authorize(Roles = "Staff,Admin")]
     public async Task<IActionResult> Create(OrganizerViewModel model)
     {
-        if (!CanManage) return RedirectToAction("Login", "Auth");
-
         var result = await _api.PostAsync<OrganizerViewModel>("/api/organizers", new
         {
             model.Name,
@@ -51,20 +45,18 @@ public class OrganizersController : Controller
     }
 
     [HttpGet]
+    [Authorize(Roles = "Staff,Admin")]
     public async Task<IActionResult> Edit(int id)
     {
-        if (!CanManage) return RedirectToAction("Login", "Auth");
-
         var organizer = await _api.GetAsync<OrganizerViewModel>($"/api/organizers/{id}");
         if (organizer is null) return NotFound();
         return View(organizer);
     }
 
     [HttpPost]
+    [Authorize(Roles = "Staff,Admin")]
     public async Task<IActionResult> Edit(OrganizerViewModel model)
     {
-        if (!CanManage) return RedirectToAction("Login", "Auth");
-
         var result = await _api.PutAsync<OrganizerViewModel>($"/api/organizers/{model.Id}", new
         {
             model.Name,
@@ -85,10 +77,9 @@ public class OrganizersController : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = "Staff,Admin")]
     public async Task<IActionResult> Delete(int id)
     {
-        if (!CanManage) return RedirectToAction("Login", "Auth");
-
         var result = await _api.DeleteAsync($"/api/organizers/{id}");
         TempData[result.Success ? "Success" : "Error"] = result.Success
             ? "Organizer deleted successfully."

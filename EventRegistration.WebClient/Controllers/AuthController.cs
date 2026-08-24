@@ -1,5 +1,8 @@
+using System.Security.Claims;
 using EventRegistration.WebClient.Models;
 using EventRegistration.WebClient.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EventRegistration.WebClient.Controllers;
@@ -23,9 +26,20 @@ public class AuthController : Controller
             return View(model);
         }
 
-        HttpContext.Session.SetString("JwtToken", result.Data!.Token);
-        HttpContext.Session.SetString("UserName", result.Data.User.FullName);
-        HttpContext.Session.SetString("UserRole", result.Data.User.Role);
+        var user = result.Data!.User;
+        HttpContext.Session.SetString("JwtToken", result.Data.Token);
+
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Name, user.FullName),
+            new(ClaimTypes.Email, user.Email),
+            new(ClaimTypes.Role, user.Role)
+        };
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            new ClaimsPrincipal(identity));
 
         return RedirectToAction("Index", "Home");
     }
@@ -38,7 +52,7 @@ public class AuthController : Controller
     {
         if (model.Password != model.ConfirmPassword)
         {
-            ModelState.AddModelError(nameof(model.ConfirmPassword), "Passwords do not match.");
+            ModelState.AddModelError(string.Empty, "Mật khẩu xác nhận không khớp.");
             return View(model);
         }
 
@@ -61,9 +75,10 @@ public class AuthController : Controller
         return RedirectToAction(nameof(Login));
     }
 
-    public IActionResult Logout()
+    public async Task<IActionResult> Logout()
     {
         HttpContext.Session.Clear();
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction(nameof(Login));
     }
 }

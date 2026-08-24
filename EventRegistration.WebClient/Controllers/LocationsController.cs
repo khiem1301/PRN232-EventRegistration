@@ -1,5 +1,6 @@
 using EventRegistration.WebClient.Models;
 using EventRegistration.WebClient.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EventRegistration.WebClient.Controllers;
@@ -10,9 +11,6 @@ public class LocationsController : Controller
 
     public LocationsController(EventApiClient api) => _api = api;
 
-    private bool CanManage =>
-        HttpContext.Session.GetString("UserRole") is "Staff" or "Admin";
-
     [HttpGet]
     public async Task<IActionResult> Index()
     {
@@ -21,17 +19,13 @@ public class LocationsController : Controller
     }
 
     [HttpGet]
-    public IActionResult Create()
-    {
-        if (!CanManage) return RedirectToAction("Login", "Auth");
-        return View(new LocationViewModel());
-    }
+    [Authorize(Roles = "Staff,Admin")]
+    public IActionResult Create() => View(new LocationViewModel());
 
     [HttpPost]
+    [Authorize(Roles = "Staff,Admin")]
     public async Task<IActionResult> Create(LocationViewModel model)
     {
-        if (!CanManage) return RedirectToAction("Login", "Auth");
-
         var result = await _api.PostAsync<LocationViewModel>("/api/locations", new
         {
             model.Name,
@@ -51,20 +45,18 @@ public class LocationsController : Controller
     }
 
     [HttpGet]
+    [Authorize(Roles = "Staff,Admin")]
     public async Task<IActionResult> Edit(int id)
     {
-        if (!CanManage) return RedirectToAction("Login", "Auth");
-
         var location = await _api.GetAsync<LocationViewModel>($"/api/locations/{id}");
         if (location is null) return NotFound();
         return View(location);
     }
 
     [HttpPost]
+    [Authorize(Roles = "Staff,Admin")]
     public async Task<IActionResult> Edit(LocationViewModel model)
     {
-        if (!CanManage) return RedirectToAction("Login", "Auth");
-
         var result = await _api.PutAsync<LocationViewModel>($"/api/locations/{model.Id}", new
         {
             model.Name,
@@ -85,10 +77,9 @@ public class LocationsController : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = "Staff,Admin")]
     public async Task<IActionResult> Delete(int id)
     {
-        if (!CanManage) return RedirectToAction("Login", "Auth");
-
         var result = await _api.DeleteAsync($"/api/locations/{id}");
         TempData[result.Success ? "Success" : "Error"] = result.Success
             ? "Location deleted successfully."

@@ -20,5 +20,5 @@ public class AuthController : ApiControllerBase
     [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto request) =>
-        ToActionResult(await _authService.LoginAsync(request));
+        ToActionResult(await _authService.LoginAsync(request)); 
 }

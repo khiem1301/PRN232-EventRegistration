@@ -80,9 +80,46 @@ public class EventApiClient
         try
         {
             var json = await response.Content.ReadAsStringAsync();
+            if (string.IsNullOrWhiteSpace(json))
+                return response.ReasonPhrase;
+
             using var doc = JsonDocument.Parse(json);
-            if (doc.RootElement.TryGetProperty("error", out var errorProp))
-                return errorProp.GetString();
+            var root = doc.RootElement;
+
+            if (root.ValueKind == JsonValueKind.Object)
+            {
+                if (root.TryGetProperty("error", out var errorProp) && errorProp.ValueKind == JsonValueKind.String)
+                    return errorProp.GetString();
+
+                if (root.TryGetProperty("errors", out var errorsProp) && errorsProp.ValueKind == JsonValueKind.Object)
+                {
+                    var messages = new List<string>();
+                    foreach (var prop in errorsProp.EnumerateObject())
+                    {
+                        if (prop.Value.ValueKind == JsonValueKind.Array)
+                        {
+                            foreach (var item in prop.Value.EnumerateArray())
+                            {
+                                if (item.ValueKind == JsonValueKind.String)
+                                    messages.Add(item.GetString()!);
+                            }
+                        }
+                        else if (prop.Value.ValueKind == JsonValueKind.String)
+                        {
+                            messages.Add(prop.Value.GetString()!);
+                        }
+                    }
+                    if (messages.Count > 0)
+                        return string.Join(" ", messages);
+                }
+
+                if (root.TryGetProperty("detail", out var detailProp) && detailProp.ValueKind == JsonValueKind.String)
+                    return detailProp.GetString();
+
+                if (root.TryGetProperty("title", out var titleProp) && titleProp.ValueKind == JsonValueKind.String)
+                    return titleProp.GetString();
+            }
+
             return json;
         }
         catch

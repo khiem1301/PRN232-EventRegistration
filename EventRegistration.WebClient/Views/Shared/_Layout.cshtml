@@ -39,7 +39,7 @@
                                 <i class="bi bi-people me-1"></i>Organizers
                             </a>
                         </li>
-                        @if (Context.Session.GetString("UserRole") is "Staff" or "Admin")
+                        @if (User.IsInRole("Staff") || User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Reports" asp-action="Index">
@@ -47,7 +47,7 @@
                                 </a>
                             </li>
                         }
-                        @if (Context.Session.GetString("JwtToken") != null)
+                        @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Registrations" asp-action="Index">
@@ -64,7 +64,7 @@
                                     <i class="bi bi-person-circle me-1"></i>Profile
                                 </a>
                             </li>
-                            @if (Context.Session.GetString("UserRole") == "Admin")
+                            @if (User.IsInRole("Admin"))
                             {
                                 <li class="nav-item">
                                     <a class="nav-link" asp-controller="Users" asp-action="Index">
@@ -72,7 +72,7 @@
                                     </a>
                                 </li>
                             }
-                            @if (Context.Session.GetString("UserRole") is "Staff" or "Admin")
+                            @if (User.IsInRole("Staff") || User.IsInRole("Admin"))
                             {
                                 <li class="nav-item">
                                     <a class="nav-link" asp-controller="Registrations" asp-action="CheckIn">
@@ -83,13 +83,13 @@
                         }
                     </ul>
                     <ul class="navbar-nav align-items-lg-center gap-lg-2">
-                        @if (Context.Session.GetString("JwtToken") != null)
+                        @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
                                 <span class="user-badge">
                                     <i class="bi bi-person-fill me-1"></i>
-                                    @Context.Session.GetString("UserName")
-                                    <span class="opacity-75">· @Context.Session.GetString("UserRole")</span>
+                                    @User.Identity?.Name
+                                    <span class="opacity-75">· @(User.IsInRole("Admin") ? "Admin" : User.IsInRole("Staff") ? "Staff" : "Student")</span>
                                 </span>
                             </li>
                             <li class="nav-item">

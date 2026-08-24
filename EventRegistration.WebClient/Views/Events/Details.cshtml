@@ -1,5 +1,5 @@
 @model EventRegistration.WebClient.Models.EventDetailViewModel
-@{ ViewData["Title"] = Model.Title; var canManage = Context.Session.GetString("UserRole") is "Staff" or "Admin"; var isLoggedIn = !string.IsNullOrEmpty(Context.Session.GetString("JwtToken")); }
+@{ ViewData["Title"] = Model.Title; var canManage = User.IsInRole("Staff") || User.IsInRole("Admin"); var isLoggedIn = User.Identity?.IsAuthenticated == true; }
 
 <div class="page-header d-flex flex-wrap justify-content-between align-items-end gap-3">
     <div>

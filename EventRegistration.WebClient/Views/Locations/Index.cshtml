@@ -1,5 +1,5 @@
 @model List<EventRegistration.WebClient.Models.LocationViewModel>
-@{ ViewData["Title"] = "Locations"; var canManage = Context.Session.GetString("UserRole") is "Staff" or "Admin"; }
+@{ ViewData["Title"] = "Locations"; var canManage = User.IsInRole("Staff") || User.IsInRole("Admin"); }
 
 <div class="page-header d-flex flex-wrap justify-content-between align-items-end gap-3">
     <div>
